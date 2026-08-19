@@ -5,9 +5,10 @@ import API_BASE_URL from "../config";
 
 function Login() {
   const [form, setForm] = useState({
-    identifier: "",
+    email: "",
     password: "",
   });
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -22,8 +23,8 @@ function Login() {
     e.preventDefault();
     setErrorMsg("");
 
-    if (!form.identifier || !form.password) {
-      setErrorMsg("Please enter your email/phone and password.");
+    if (!form.email || !form.password) {
+      setErrorMsg("Please enter both email and password.");
       return;
     }
 
@@ -34,7 +35,7 @@ function Login() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ email: form.email, password: form.password, rememberMe }),
       });
 
       const data = await response.json();
@@ -94,18 +95,18 @@ function Login() {
             <form className="mt-8 space-y-6" onSubmit={loginUser}>
               <div className="space-y-4 rounded-md shadow-sm">
                 <div>
-                  <label htmlFor="identifier" className="block text-sm font-medium text-gray-700 mb-1">
-                    Email or Phone Number
+                  <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 mb-1">
+                    Email address
                   </label>
                   <input
-                    id="identifier"
-                    name="identifier"
-                    type="text"
-                    autoComplete="email tel"
+                    id="email-address"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
                     required
                     className="relative block w-full rounded-md border border-gray-300 py-2 px-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                    placeholder="Email address or phone number"
-                    value={form.identifier}
+                    placeholder="Email address"
+                    value={form.email}
                     onChange={handleInputChange}
                   />
                 </div>
@@ -125,6 +126,18 @@ function Login() {
                     onChange={handleInputChange}
                   />
                 </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                  />
+                  Remember me for 30 days
+                </label>
               </div>
 
               <div>

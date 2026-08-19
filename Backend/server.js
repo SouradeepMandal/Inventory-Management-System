@@ -4,7 +4,6 @@ const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
-const twilio = require("twilio");
 
 const { main } = require("./models/index");
 const User = require("./models/users");
@@ -21,15 +20,15 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 const JWT_SECRET = process.env.JWT_SECRET || "inventory_secret_jwt_key_2026_super_secure";
 
-// Twilio Setup
-const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+// Gmail SMTP Setup (via Nodemailer)
+const emailUser = process.env.EMAIL_USER || "souradeepmandal459@gmail.com";
+const emailPass = process.env.EMAIL_PASS || "hpoh pvda nhcn srjl";
 
-// Nodemailer Setup
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: emailUser,
+    pass: emailPass,
   },
 });
 
@@ -48,35 +47,21 @@ app.use("/api/ai", aiRoute);
 
 // ------------- Authentication API ------------
 
-// User Registration Endpoint (OTP-first, no password required yet)
+// Step 1: Send OTP to email (no password yet)
 app.post("/api/register", async (req, res) => {
   try {
-    const { firstName, lastName, email, phoneNumber, imageUrl, verificationMethod } = req.body;
+    const { firstName, lastName, email, imageUrl } = req.body;
 
-    if (!firstName || !lastName || !verificationMethod) {
-      return res.status(400).json({ message: "Please fill in all required fields." });
-    }
-    if (verificationMethod === 'email' && !email) {
-      return res.status(400).json({ message: "Email is required for email verification." });
-    }
-    if (verificationMethod === 'phone' && !phoneNumber) {
-      return res.status(400).json({ message: "Phone number is required for phone verification." });
+    if (!firstName || !lastName || !email) {
+      return res.status(400).json({ message: "First name, last name and email are required." });
     }
 
     // Check for existing verified user
-    if (verificationMethod === 'email') {
-      const existing = await User.findOne({ email: email.toLowerCase() });
-      if (existing && existing.isVerified) {
-        return res.status(400).json({ message: "An account with this email already exists." });
-      }
-      if (existing) await User.deleteOne({ _id: existing._id });
-    } else {
-      const existing = await User.findOne({ phoneNumber });
-      if (existing && existing.isVerified) {
-        return res.status(400).json({ message: "An account with this phone number already exists." });
-      }
-      if (existing) await User.deleteOne({ _id: existing._id });
+    const existing = await User.findOne({ email: email.toLowerCase() });
+    if (existing && existing.isVerified) {
+      return res.status(400).json({ message: "An account with this email already exists." });
     }
+    if (existing) await User.deleteOne({ _id: existing._id });
 
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -85,41 +70,32 @@ app.post("/api/register", async (req, res) => {
     const newUser = new User({
       firstName,
       lastName,
-      email: email ? email.toLowerCase() : undefined,
-      phoneNumber: phoneNumber || undefined,
+      email: email.toLowerCase(),
       imageUrl,
-      verificationMethod,
       otp,
       otpExpiresAt,
       isVerified: false,
     });
     const result = await newUser.save();
 
-    if (verificationMethod === 'email') {
-      await transporter.sendMail({
-        from: process.env.EMAIL_USER,
-        to: result.email,
-        subject: "Your Inventory App Verification Code",
-        html: `<p>Your verification code is:</p><h2 style="letter-spacing:4px">${otp}</h2><p>This code expires in <strong>10 minutes</strong>.</p>`,
-      });
-    } else if (verificationMethod === 'phone') {
-      if (process.env.TWILIO_ACCOUNT_SID) {
-        try {
-          await twilioClient.messages.create({
-            body: `Your Inventory App code is: ${otp}. Valid for 10 minutes.`,
-            from: process.env.TWILIO_PHONE_NUMBER,
-            to: phoneNumber,
-          });
-        } catch (smsError) {
-          console.error("Twilio SMS Error:", smsError);
-        }
-      }
-    }
+    // Send OTP via Gmail SMTP
+    await transporter.sendMail({
+      from: `"Inventory App" <${emailUser}>`,
+      to: result.email,
+      subject: "Your Inventory App Verification Code",
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:32px;border:1px solid #e5e7eb;border-radius:12px">
+          <h2 style="color:#4f46e5;margin-bottom:8px">Verify your email</h2>
+          <p style="color:#6b7280;margin-bottom:24px">Use the code below to verify your email address. It expires in <strong>10 minutes</strong>.</p>
+          <div style="background:#f3f4f6;border-radius:8px;padding:24px;text-align:center;letter-spacing:12px;font-size:32px;font-weight:700;color:#111827">${otp}</div>
+          <p style="color:#9ca3af;font-size:12px;margin-top:24px">If you didn't request this, you can safely ignore this email.</p>
+        </div>
+      `,
+    });
 
     res.status(201).json({
-      message: `OTP sent to your ${verificationMethod}.`,
+      message: "OTP sent to your email.",
       userId: result._id,
-      requiresVerification: true
     });
   } catch (error) {
     console.error("Register Error: ", error);
@@ -127,7 +103,7 @@ app.post("/api/register", async (req, res) => {
   }
 });
 
-// OTP Verification Endpoint (returns a temporary registration token)
+// Step 2: Verify OTP → returns a temporary token
 app.post("/api/verify-otp", async (req, res) => {
   try {
     const { userId, otp } = req.body;
@@ -138,16 +114,16 @@ app.post("/api/verify-otp", async (req, res) => {
     if (user.otpExpiresAt < new Date()) return res.status(400).json({ message: "OTP has expired. Please register again." });
     if (user.otp !== otp) return res.status(400).json({ message: "Invalid OTP. Please try again." });
 
-    // OTP matched — clear it but do NOT set isVerified yet (waiting for password)
+    // OTP matched — clear it, await password step
     user.otp = undefined;
     user.otpExpiresAt = undefined;
     await user.save();
 
-    // Issue a short-lived temporary token to allow the password-setting step
+    // Short-lived token to unlock the password step
     const registrationToken = jwt.sign(
-      { id: user._id, step: 'set_password' },
+      { id: user._id, step: "set_password" },
       JWT_SECRET,
-      { expiresIn: '15m' }
+      { expiresIn: "15m" }
     );
 
     res.status(200).json({
@@ -160,7 +136,7 @@ app.post("/api/verify-otp", async (req, res) => {
   }
 });
 
-// Set Password Endpoint (finalizes account after OTP verification)
+// Step 3: Set Password → finalises account, logs user in
 app.post("/api/set-password", async (req, res) => {
   try {
     const { registrationToken, password } = req.body;
@@ -176,10 +152,10 @@ app.post("/api/set-password", async (req, res) => {
     try {
       decoded = jwt.verify(registrationToken, JWT_SECRET);
     } catch (e) {
-      return res.status(401).json({ message: "Token expired or invalid. Please register again." });
+      return res.status(401).json({ message: "Session expired. Please register again." });
     }
 
-    if (decoded.step !== 'set_password') {
+    if (decoded.step !== "set_password") {
       return res.status(401).json({ message: "Invalid token." });
     }
 
@@ -194,7 +170,7 @@ app.post("/api/set-password", async (req, res) => {
     const token = jwt.sign(
       { id: user._id, email: user.email },
       JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: "7d" }
     );
 
     res.status(200).json({
@@ -204,7 +180,6 @@ app.post("/api/set-password", async (req, res) => {
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
-        phoneNumber: user.phoneNumber,
         imageUrl: user.imageUrl,
       },
       token,
@@ -215,39 +190,31 @@ app.post("/api/set-password", async (req, res) => {
   }
 });
 
-// User Signin Endpoint (accepts email or phone number)
+// Login: email + password
 app.post("/api/login", async (req, res) => {
   try {
-    const { identifier, password } = req.body;
+    const { email, password, rememberMe } = req.body;
 
-    if (!identifier || !password) {
-      return res.status(400).json({ message: "Please enter your email/phone and password." });
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required." });
     }
 
-    // Find user by email OR phone number
-    const user = await User.findOne({
-      $or: [
-        { email: identifier.toLowerCase() },
-        { phoneNumber: identifier }
-      ]
-    });
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) return res.status(401).json({ message: "Invalid email or password." });
 
-    if (!user) {
-      return res.status(401).json({ message: "Invalid credentials." });
-    }
     if (!user.isVerified) {
-      return res.status(403).json({ message: "Your account is not verified. Please register again to verify." });
+      return res.status(403).json({ message: "Your account is not verified. Please register again." });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({ message: "Invalid credentials." });
-    }
+    if (!isMatch) return res.status(401).json({ message: "Invalid email or password." });
 
+    // Remember Me: 30 days vs 7 days
+    const expiresIn = rememberMe ? "30d" : "7d";
     const token = jwt.sign(
       { id: user._id, email: user.email },
       JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn }
     );
 
     res.status(200).json({
@@ -257,7 +224,6 @@ app.post("/api/login", async (req, res) => {
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
-        phoneNumber: user.phoneNumber,
         imageUrl: user.imageUrl,
       },
       token,
@@ -268,13 +234,11 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-// Get Logged-in User Profile Endpoint
+// Get Logged-in User Profile
 app.get("/api/user/me", verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
     res.json(user);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
