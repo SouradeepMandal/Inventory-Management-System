@@ -171,7 +171,7 @@ function Register() {
                 />
               </div>
 
-              <UploadImage uploadImage={uploadImage} label="Upload Profile Picture (Optional)" />
+              <UploadImage uploadImage={uploadImage} label="Upload Profile Picture (Optional)" inputId="profilePicInput" />
 
               <div>
                 <button

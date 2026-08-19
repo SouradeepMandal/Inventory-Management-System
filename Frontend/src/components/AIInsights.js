@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import API_BASE_URL from "../config";
 
 function AIInsights() {
   const [insights, setInsights] = useState(null);
@@ -12,7 +13,7 @@ function AIInsights() {
     const token = localStorage.getItem("token");
 
     try {
-      const res = await fetch("process.env.REACT_APP_API_URL || "http://localhost:4000"/api/ai/insights", {
+      const res = await fetch(`${API_BASE_URL}/api/ai/insights`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

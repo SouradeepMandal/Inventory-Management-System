@@ -18,7 +18,7 @@ function PurchaseDetails() {
 
   // Fetching Data of All Purchase items
   const fetchPurchaseData = () => {
-    fetch(`${API_BASE_URL}/api/purchase/get/${authContext.user}`)
+    fetch(`${API_BASE_URL}/api/purchase/get/${authContext.user?._id || authContext.user}`)
       .then((response) => response.json())
       .then((data) => {
         setAllPurchaseData(data);
@@ -28,7 +28,7 @@ function PurchaseDetails() {
 
   // Fetching Data of All Products
   const fetchProductsData = () => {
-    fetch(`${API_BASE_URL}/api/product/get/${authContext.user}`)
+    fetch(`${API_BASE_URL}/api/product/get/${authContext.user?._id || authContext.user}`)
       .then((response) => response.json())
       .then((data) => {
         setAllProducts(data);
@@ -58,7 +58,7 @@ function PurchaseDetails() {
           />
         )}
         {/* Table */}
-        <div className="rounded-xl border bg-white border-gray-100 shadow-sm">
+        <div className="rounded-xl border bg-white border-gray-100 shadow-sm transition-shadow duration-300 hover:shadow-md">
           <div className="flex flex-col sm:flex-row justify-between gap-3 pt-5 pb-3 px-4">
             <div className="flex gap-4 items-center">
               <span className="font-bold text-gray-800">Purchase Details</span>

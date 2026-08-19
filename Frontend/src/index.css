@@ -27,6 +27,11 @@ body {
   background-color: #f9fafb;
 }
 
+::selection {
+  background-color: #e0e7ff; /* indigo-100 */
+  color: #312e81; /* indigo-900 */
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;

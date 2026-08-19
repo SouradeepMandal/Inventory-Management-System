@@ -10,16 +10,15 @@ export default function AddPurchaseDetails({
   authContext
 }) {
   const [purchase, setPurchase] = useState({
-    userID: authContext.user,
+    userID: authContext.user?._id || authContext.user,
     productID: "",
     quantityPurchased: "",
     purchaseDate: "",
     totalPurchaseAmount: "",
   });
-  const [open, setOpen] = useState(true);
+  const [open] = useState(true);
   const cancelButtonRef = useRef(null);
 
-  console.log("PPu: ", purchase);
 
   // Handling Input Change for input fields
   const handleInputChange = (key, value) => {
@@ -57,7 +56,7 @@ export default function AddPurchaseDetails({
         as="div"
         className="relative z-10"
         initialFocus={cancelButtonRef}
-        onClose={setOpen}
+        onClose={addSaleModalSetting}
       >
         <Transition.Child
           as={Fragment}

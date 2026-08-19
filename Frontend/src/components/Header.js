@@ -36,7 +36,7 @@ export default function Header() {
                     <div className="flex-shrink-0">
                       <div className="flex items-center gap-2">
                         <img
-                          className="h-8 w-8 flex-shrink-0"
+                          className="h-8 w-8 flex-shrink-0 transition-transform duration-300 hover:scale-110 hover:rotate-3"
                           src={require("../assets/logo.png")}
                           alt="Inventory Management System"
                         />

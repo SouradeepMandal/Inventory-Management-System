@@ -14,7 +14,7 @@ export default function UpdateProduct({
     manufacturer: manufacturer,
     description: description,
   });
-  const [open, setOpen] = useState(true);
+  const [open] = useState(true);
   const cancelButtonRef = useRef(null);
 
   const handleInputChange = (key, value) => {
@@ -34,7 +34,7 @@ export default function UpdateProduct({
       const data = await response.json();
       if (response.ok) {
         alert("Product Updated");
-        setOpen(false);
+        updateModalSetting();
       } else {
         alert("Error: " + (data.message || "Failed to update product. Check database connection."));
       }
@@ -51,7 +51,7 @@ export default function UpdateProduct({
         as="div"
         className="relative z-10"
         initialFocus={cancelButtonRef}
-        onClose={setOpen}
+        onClose={updateModalSetting}
       >
         <Transition.Child
           as={Fragment}

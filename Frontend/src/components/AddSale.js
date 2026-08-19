@@ -11,14 +11,14 @@ export default function AddSale({
   authContext
 }) {
   const [sale, setSale] = useState({
-    userID: authContext.user,
+    userID: authContext.user?._id || authContext.user,
     productID: "",
     storeID: "",
     stockSold: "",
     saleDate: "",
     totalSaleAmount: "",
   });
-  const [open, setOpen] = useState(true);
+  const [open] = useState(true);
   const cancelButtonRef = useRef(null);
 
 
@@ -58,7 +58,7 @@ export default function AddSale({
         as="div"
         className="relative z-10"
         initialFocus={cancelButtonRef}
-        onClose={setOpen}
+        onClose={addSaleModalSetting}
       >
         <Transition.Child
           as={Fragment}

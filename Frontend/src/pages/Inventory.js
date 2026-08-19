@@ -22,7 +22,7 @@ function Inventory() {
 
   // Fetching Data of All Products
   const fetchProductsData = () => {
-    fetch(`${API_BASE_URL}/api/product/get/${authContext.user}`)
+    fetch(`${API_BASE_URL}/api/product/get/${authContext.user?._id || authContext.user}`)
       .then((response) => response.json())
       .then((data) => {
         setAllProducts(data);
@@ -32,7 +32,7 @@ function Inventory() {
 
   // Fetching Data of Search Products
   const fetchSearchData = () => {
-    fetch(`${API_BASE_URL}/api/product/search?searchTerm=${searchTerm}&userId=${authContext.user}`)
+    fetch(`${API_BASE_URL}/api/product/search?searchTerm=${searchTerm}&userId=${authContext.user?._id || authContext.user}`)
       .then((response) => response.json())
       .then((data) => {
         setAllProducts(data);
@@ -42,7 +42,7 @@ function Inventory() {
 
   // Fetching all stores data
   const fetchSalesData = () => {
-    fetch(`${API_BASE_URL}/api/store/get/${authContext.user}`)
+    fetch(`${API_BASE_URL}/api/store/get/${authContext.user?._id || authContext.user}`)
       .then((response) => response.json())
       .then((data) => {
         setAllStores(data);
@@ -182,11 +182,11 @@ function Inventory() {
         )}
 
         {/* Products Table */}
-        <div className="rounded-xl border bg-white border-gray-100 shadow-sm">
+        <div className="rounded-xl border bg-white border-gray-100 shadow-sm transition-shadow duration-300 hover:shadow-md">
           <div className="flex flex-col sm:flex-row justify-between gap-3 pt-5 pb-3 px-4">
             <div className="flex gap-4 items-center">
               <span className="font-bold text-gray-800">Products</span>
-              <div className="flex items-center px-3 border border-gray-200 rounded-lg bg-gray-50">
+              <div className="flex items-center px-3 border border-gray-200 rounded-lg bg-gray-50 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-transparent transition-all duration-200">
                 <img
                   alt="search-icon"
                   className="w-4 h-4 flex-shrink-0 opacity-50"

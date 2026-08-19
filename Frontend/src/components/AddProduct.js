@@ -10,13 +10,12 @@ export default function AddProduct({
 }) {
   const authContext = useContext(AuthContext);
   const [product, setProduct] = useState({
-    userId: authContext.user,
+    userId: authContext.user?._id || authContext.user,
     name: "",
     manufacturer: "",
     description: "",
   });
-  console.log("----",product)
-  const [open, setOpen] = useState(true);
+  const [open] = useState(true);
   const cancelButtonRef = useRef(null);
 
   const handleInputChange = (key, value) => {
@@ -53,7 +52,7 @@ export default function AddProduct({
         as="div"
         className="relative z-10"
         initialFocus={cancelButtonRef}
-        onClose={setOpen}
+        onClose={addProductModalSetting}
       >
         <Transition.Child
           as={Fragment}

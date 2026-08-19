@@ -129,7 +129,7 @@ function Dashboard() {
   };
 
   const fetchMonthlySalesData = () => {
-    fetch(`${API_BASE_URL}/api/sales/getmonthly/${authContext.user}`)
+    fetch(`${API_BASE_URL}/api/sales/getmonthly/${userId}`)
       .then((response) => response.json())
       .then((datas) => updateChartData(datas.salesAmount))
       .catch((err) => console.log(err));
@@ -204,7 +204,7 @@ function Dashboard() {
       {/* Analytics Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Bar Chart */}
-        <div className="bg-white p-4 sm:p-6 rounded-xl border border-gray-100 shadow-sm">
+        <div className="bg-white p-4 sm:p-6 rounded-xl border border-gray-100 shadow-sm transition-shadow duration-300 hover:shadow-md">
           <h3 className="text-sm font-bold text-gray-700 mb-4">Monthly Sales Overview</h3>
           <div className="w-full overflow-hidden">
             <Chart options={chart.options} series={chart.series} type="bar" width="100%" height={300} />
@@ -212,7 +212,7 @@ function Dashboard() {
         </div>
 
         {/* Doughnut Chart */}
-        <div className="bg-white p-4 sm:p-6 rounded-xl border border-gray-100 shadow-sm">
+        <div className="bg-white p-4 sm:p-6 rounded-xl border border-gray-100 shadow-sm transition-shadow duration-300 hover:shadow-md">
           <h3 className="text-sm font-bold text-gray-700 mb-4">Product Stock Distribution</h3>
           <div className="flex justify-center items-center">
             <div className="w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64">

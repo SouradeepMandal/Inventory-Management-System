@@ -15,7 +15,7 @@ function Store() {
 
   // Fetching all stores data
   const fetchData = () => {
-    fetch(`${API_BASE_URL}/api/store/get/${authContext.user}`)
+    fetch(`${API_BASE_URL}/api/store/get/${authContext.user?._id || authContext.user}`)
       .then((response) => response.json())
       .then((data) => {
         setAllStores(data);
@@ -48,10 +48,10 @@ function Store() {
                 className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200"
                 key={element._id}
               >
-                <div className="aspect-video w-full overflow-hidden">
+                <div className="aspect-video w-full overflow-hidden group">
                   <img
                     alt="store"
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                     src={element.image}
                   />
                 </div>

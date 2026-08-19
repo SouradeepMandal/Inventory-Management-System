@@ -8,9 +8,9 @@ import API_BASE_URL from "../config";
 export default function AddStore({ addStoreModalSetting, handlePageUpdate }) {
   const authContext = useContext(AuthContext);
   const [form, setForm] = useState({
-    userId: authContext.user,
+    userId: authContext.user?._id || authContext.user,
     name: "",
-    category: "",
+    category: "Electronics",
     address: "",
     city: "",
     image: "",
@@ -20,10 +20,15 @@ export default function AddStore({ addStoreModalSetting, handlePageUpdate }) {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const [open, setOpen] = useState(true);
+  const [open] = useState(true);
   const cancelButtonRef = useRef(null);
 
   const addProduct = async () => {
+    if (!form.name || !form.category || !form.address || !form.city || !form.image) {
+      alert("Please fill in all fields and upload a store image to continue.");
+      return;
+    }
+    
     try {
       const response = await fetch(`${API_BASE_URL}/api/store/add`, {
         method: "POST",
@@ -71,7 +76,7 @@ export default function AddStore({ addStoreModalSetting, handlePageUpdate }) {
         as="div"
         className="relative z-10"
         initialFocus={cancelButtonRef}
-        onClose={setOpen}
+        onClose={addStoreModalSetting}
       >
         <Transition.Child
           as={Fragment}
@@ -194,7 +199,7 @@ export default function AddStore({ addStoreModalSetting, handlePageUpdate }) {
                         </div>
                         <div className="flex items-center space-x-4">
                           <div>
-                            <UploadImage uploadImage={uploadImage} label="Upload Store Logo (Optional)" />
+                            <UploadImage uploadImage={uploadImage} label="Upload Store Logo" inputId="storeLogoInput" />
                             {/* <label
                               className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                               for="small_size"
