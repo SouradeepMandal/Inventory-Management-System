@@ -150,8 +150,12 @@ app.get("/api/user/me", verifyToken, async (req, res) => {
 
 // Test endpoint
 app.get("/testget", async (req, res) => {
-  const result = await Product.findOne({});
-  res.json(result);
+  try {
+    const result = await Product.findOne({});
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: "Database connection failed! Did you add 0.0.0.0/0 to MongoDB Atlas Network Access?" });
+  }
 });
 
 // Start Server
