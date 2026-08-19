@@ -3,6 +3,8 @@ const express = require("express");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
+const twilio = require("twilio");
 
 const { main } = require("./models/index");
 const User = require("./models/users");
@@ -19,6 +21,18 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 const JWT_SECRET = process.env.JWT_SECRET || "inventory_secret_jwt_key_2026_super_secure";
 
+// Twilio Setup
+const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+
+// Nodemailer Setup
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
 // Connect Database
 main();
 
@@ -34,24 +48,36 @@ app.use("/api/ai", aiRoute);
 
 // ------------- Authentication API ------------
 
-// User Registration Endpoint
+// User Registration Endpoint (Sends OTP)
 app.post("/api/register", async (req, res) => {
   try {
-    const { firstName, lastName, email, password, phoneNumber, imageUrl } = req.body;
+    const { firstName, lastName, email, password, phoneNumber, imageUrl, verificationMethod } = req.body;
 
-    if (!email || !password || !firstName || !lastName) {
+    if (!email || !password || !firstName || !lastName || !verificationMethod) {
       return res.status(400).json({ message: "Please fill in all required fields." });
+    }
+
+    if (verificationMethod === 'phone' && !phoneNumber) {
+      return res.status(400).json({ message: "Phone number is required for phone verification." });
     }
 
     // Check if user already exists
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
-      return res.status(400).json({ message: "User with this email already exists." });
+      if (existingUser.isVerified) {
+        return res.status(400).json({ message: "User with this email already exists and is verified." });
+      }
+      // If unverified, we will just delete the old one to start fresh
+      await User.deleteOne({ _id: existingUser._id });
     }
 
     // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
 
     const newUser = new User({
       firstName,
@@ -60,32 +86,94 @@ app.post("/api/register", async (req, res) => {
       password: hashedPassword,
       phoneNumber,
       imageUrl,
+      verificationMethod,
+      otp,
+      otpExpiresAt,
+      isVerified: false,
     });
 
     const result = await newUser.save();
 
-    // Generate JWT Token
-    const token = jwt.sign(
-      { id: result._id, email: result.email },
-      JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+    if (verificationMethod === 'email') {
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: result.email,
+        subject: "Your Inventory App Verification Code",
+        text: `Your verification code is: ${otp}. It will expire in 10 minutes.`,
+      };
+      await transporter.sendMail(mailOptions);
+    } else if (verificationMethod === 'phone') {
+      if (process.env.TWILIO_ACCOUNT_SID) {
+        try {
+          await twilioClient.messages.create({
+            body: `Your Inventory App verification code is: ${otp}`,
+            from: process.env.TWILIO_PHONE_NUMBER,
+            to: phoneNumber,
+          });
+        } catch (smsError) {
+          console.error("Twilio SMS Error (OTP might not have sent):", smsError);
+        }
+      }
+    }
 
     res.status(201).json({
-      message: "Registration successful!",
-      user: {
-        _id: result._id,
-        firstName: result.firstName,
-        lastName: result.lastName,
-        email: result.email,
-        phoneNumber: result.phoneNumber,
-        imageUrl: result.imageUrl,
-      },
-      token,
+      message: `Registration started! OTP sent to your ${verificationMethod}.`,
+      userId: result._id,
+      requiresVerification: true
     });
   } catch (error) {
     console.error("Register Error: ", error);
     res.status(500).json({ message: "Registration failed", error: error.message });
+  }
+});
+
+// User OTP Verification Endpoint
+app.post("/api/verify-otp", async (req, res) => {
+  try {
+    const { userId, otp } = req.body;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+    if (user.isVerified) {
+      return res.status(400).json({ message: "User is already verified." });
+    }
+    if (user.otpExpiresAt < new Date()) {
+      return res.status(400).json({ message: "OTP has expired. Please register again." });
+    }
+    if (user.otp !== otp) {
+      return res.status(400).json({ message: "Invalid OTP." });
+    }
+
+    // OTP matches! Verify user.
+    user.isVerified = true;
+    user.otp = undefined;
+    user.otpExpiresAt = undefined;
+    await user.save();
+
+    // Generate JWT Token
+    const token = jwt.sign(
+      { id: user._id, email: user.email },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.status(200).json({
+      message: "Verification successful! You are now logged in.",
+      user: {
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        imageUrl: user.imageUrl,
+      },
+      token,
+    });
+  } catch (error) {
+    console.error("Verification Error: ", error);
+    res.status(500).json({ message: "Verification failed", error: error.message });
   }
 });
 
@@ -102,6 +190,10 @@ app.post("/api/login", async (req, res) => {
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
       return res.status(401).json({ message: "Invalid email or password." });
+    }
+
+    if (!user.isVerified) {
+      return res.status(403).json({ message: "Your account is not verified. Please register again to verify." });
     }
 
     // Compare passwords
