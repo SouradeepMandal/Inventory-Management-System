@@ -11,6 +11,7 @@ function Store() {
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Fetching all stores data

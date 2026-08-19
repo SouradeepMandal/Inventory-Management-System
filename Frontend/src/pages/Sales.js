@@ -16,6 +16,7 @@ function Sales() {
     fetchSalesData();
     fetchProductsData();
     fetchStoresData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [updatePage]);
 
   // Fetching Data of All Sales

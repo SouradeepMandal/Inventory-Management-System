@@ -18,6 +18,7 @@ function Inventory() {
   useEffect(() => {
     fetchProductsData();
     fetchSalesData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [updatePage]);
 
   // Fetching Data of All Products

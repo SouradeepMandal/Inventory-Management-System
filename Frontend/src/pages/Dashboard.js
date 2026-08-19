@@ -98,6 +98,7 @@ function Dashboard() {
       fetchProductsData();
       fetchMonthlySalesData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   const fetchTotalSaleAmount = () => {

@@ -14,6 +14,7 @@ function PurchaseDetails() {
   useEffect(() => {
     fetchPurchaseData();
     fetchProductsData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [updatePage]);
 
   // Fetching Data of All Purchase items
