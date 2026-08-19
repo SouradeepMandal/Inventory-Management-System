@@ -6,7 +6,7 @@ const jwt = require("jsonwebtoken");
 
 const { main } = require("./models/index");
 const User = require("./models/users");
-const Product = require("./models/Product");
+const Product = require("./models/product");
 
 const productRoute = require("./router/product");
 const storeRoute = require("./router/store");
