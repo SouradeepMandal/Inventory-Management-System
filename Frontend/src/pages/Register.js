@@ -212,14 +212,14 @@ function Register() {
                 <input
                   name="firstName" type="text" required
                   disabled={phase !== "details"}
-                  className="flex-1 rounded-md border border-gray-300 py-2 px-3 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-gray-50 disabled:text-gray-500"
+                  className="flex-1 min-w-0 rounded-md border border-gray-300 py-2 px-3 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-gray-50 disabled:text-gray-500"
                   placeholder="First Name"
                   value={form.firstName} onChange={handleInputChange}
                 />
                 <input
                   name="lastName" type="text" required
                   disabled={phase !== "details"}
-                  className="flex-1 rounded-md border border-gray-300 py-2 px-3 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-gray-50 disabled:text-gray-500"
+                  className="flex-1 min-w-0 rounded-md border border-gray-300 py-2 px-3 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-gray-50 disabled:text-gray-500"
                   placeholder="Last Name"
                   value={form.lastName} onChange={handleInputChange}
                 />
@@ -231,7 +231,7 @@ function Register() {
                   <input
                     name="email" type="email" required
                     disabled={phase !== "details"}
-                    className="flex-1 rounded-md border border-gray-300 py-2 px-3 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-gray-50 disabled:text-gray-500"
+                    className="flex-1 min-w-0 rounded-md border border-gray-300 py-2 px-3 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-gray-50 disabled:text-gray-500"
                     placeholder="Email address"
                     value={form.email} onChange={handleInputChange}
                   />
@@ -285,7 +285,7 @@ function Register() {
                       <input
                         type="text" inputMode="numeric" pattern="\d{6}" maxLength={6}
                         disabled={otpExpired}
-                        className="flex-1 rounded-md border border-gray-300 py-2 px-3 text-gray-900 text-center text-xl font-bold tracking-[0.4em] focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-gray-100"
+                        className="flex-1 min-w-0 rounded-md border border-gray-300 py-2 px-3 text-gray-900 text-center text-xl font-bold tracking-[0.4em] focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:bg-gray-100"
                         placeholder="– – – – – –"
                         value={otp}
                         onChange={(e) => { setOtp(e.target.value.replace(/\D/g, "")); setErrorMsg(""); }}
