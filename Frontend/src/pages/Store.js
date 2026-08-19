@@ -27,6 +27,19 @@ function Store() {
     setShowModal(!showModal);
   };
 
+  const deleteStore = (id) => {
+    if (window.confirm("Are you sure you want to delete this store?")) {
+      fetch(`${API_BASE_URL}/api/store/delete/${id}`, {
+        method: "DELETE",
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          fetchData();
+        })
+        .catch((error) => console.error("Error deleting store:", error));
+    }
+  };
+
   return (
     <div className="w-full p-4 sm:p-6 max-w-full overflow-x-hidden">
       <div className="flex flex-col gap-5">
@@ -57,7 +70,10 @@ function Store() {
                   />
                 </div>
                 <div className="p-4 flex flex-col gap-2">
-                  <span className="font-bold text-gray-800">{element.name}</span>
+                  <div className="flex justify-between items-start">
+                    <span className="font-bold text-gray-800">{element.name}</span>
+                    <button onClick={() => deleteStore(element._id)} className="text-red-500 hover:text-red-700 text-xs font-semibold">Delete</button>
+                  </div>
                   <div className="flex items-center gap-1 text-gray-500 text-sm">
                     <img
                       alt="location-icon"

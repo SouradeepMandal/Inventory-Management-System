@@ -8,4 +8,7 @@ app.post("/add", store.addStore);
 // Get All Store
 app.get("/get/:userID", store.getAllStores)
 
+// Delete Store
+app.delete("/delete/:id", store.deleteStore);
+
 module.exports = app;

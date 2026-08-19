@@ -30,4 +30,18 @@ const getAllStores = async (req, res) => {
   }
 };
 
-module.exports = { addStore, getAllStores };
+// Delete Store
+const deleteStore = async (req, res) => {
+  try {
+    const deletedStore = await Store.findByIdAndDelete(req.params.id);
+    if (!deletedStore) {
+      return res.status(404).json({ message: "Store not found" });
+    }
+    res.status(200).json({ message: "Store deleted successfully" });
+  } catch (err) {
+    console.error("deleteStore error:", err);
+    res.status(500).json({ message: err.message || "Failed to delete store." });
+  }
+};
+
+module.exports = { addStore, getAllStores, deleteStore };
