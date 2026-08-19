@@ -1,10 +1,13 @@
 import React, { useContext, useEffect, useState } from "react";
 import Chart from "react-apexcharts";
 import AuthContext from "../AuthContext";
+import AIInsights from "../components/AIInsights";
+import API_BASE_URL from "../config";
 import { Doughnut } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
+
 export const data = {
   labels: ["Apple", "Knorr", "Shoop", "Green", "Purple", "Orange"],
   datasets: [
@@ -33,8 +36,8 @@ export const data = {
 };
 
 function Dashboard() {
-  const [saleAmount, setSaleAmount] = useState("");
-  const [purchaseAmount, setPurchaseAmount] = useState("");
+  const [saleAmount, setSaleAmount] = useState(0);
+  const [purchaseAmount, setPurchaseAmount] = useState(0);
   const [stores, setStores] = useState([]);
   const [products, setProducts] = useState([]);
 
@@ -42,254 +45,183 @@ function Dashboard() {
     options: {
       chart: {
         id: "basic-bar",
+        toolbar: { show: false },
       },
       xaxis: {
         categories: [
-          "Jan",
-          "Feb",
-          "Mar",
-          "Apr",
-          "May",
-          "Jun",
-          "Jul",
-          "Aug",
-          "Sep",
-          "Oct",
-          "Nov",
-          "Dec",
+          "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+          "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
         ],
       },
+      responsive: [
+        {
+          breakpoint: 640,
+          options: {
+            chart: { height: 250 },
+            xaxis: {
+              labels: { style: { fontSize: "10px" } },
+            },
+          },
+        },
+      ],
     },
     series: [
       {
-        name: "series",
+        name: "Monthly Sales Amount",
         data: [10, 20, 40, 50, 60, 20, 10, 35, 45, 70, 25, 70],
       },
     ],
   });
 
-  // Update Chart Data
-  const updateChartData = (salesData) => {
-    setChart({
-      ...chart,
-      series: [
-        {
-          name: "Monthly Sales Amount",
-          data: [...salesData],
-        },
-      ],
-    });
-  };
-
   const authContext = useContext(AuthContext);
+  const userId = authContext.user?._id || authContext.user;
+
+  const updateChartData = (salesData) => {
+    if (Array.isArray(salesData)) {
+      setChart((prev) => ({
+        ...prev,
+        series: [
+          {
+            name: "Monthly Sales Amount",
+            data: [...salesData],
+          },
+        ],
+      }));
+    }
+  };
 
   useEffect(() => {
-    fetchTotalSaleAmount();
-    fetchTotalPurchaseAmount();
-    fetchStoresData();
-    fetchProductsData();
-    fetchMonthlySalesData();
-  }, []);
+    if (userId) {
+      fetchTotalSaleAmount();
+      fetchTotalPurchaseAmount();
+      fetchStoresData();
+      fetchProductsData();
+      fetchMonthlySalesData();
+    }
+  }, [userId]);
 
-  // Fetching total sales amount
   const fetchTotalSaleAmount = () => {
-    fetch(
-      `http://localhost:4000/api/sales/get/${authContext.user}/totalsaleamount`
-    )
+    fetch(`${API_BASE_URL}/api/sales/get/${userId}/totalsaleamount`)
       .then((response) => response.json())
-      .then((datas) => setSaleAmount(datas.totalSaleAmount));
-  };
-
-  // Fetching total purchase amount
-  const fetchTotalPurchaseAmount = () => {
-    fetch(
-      `http://localhost:4000/api/purchase/get/${authContext.user}/totalpurchaseamount`
-    )
-      .then((response) => response.json())
-      .then((datas) => setPurchaseAmount(datas.totalPurchaseAmount));
-  };
-
-  // Fetching all stores data
-  const fetchStoresData = () => {
-    fetch(`http://localhost:4000/api/store/get/${authContext.user}`)
-      .then((response) => response.json())
-      .then((datas) => setStores(datas));
-  };
-
-  // Fetching Data of All Products
-  const fetchProductsData = () => {
-    fetch(`http://localhost:4000/api/product/get/${authContext.user}`)
-      .then((response) => response.json())
-      .then((datas) => setProducts(datas))
+      .then((datas) => setSaleAmount(datas.totalSaleAmount || 0))
       .catch((err) => console.log(err));
   };
 
-  // Fetching Monthly Sales
+  const fetchTotalPurchaseAmount = () => {
+    fetch(`${API_BASE_URL}/api/purchase/get/${userId}/totalpurchaseamount`)
+      .then((response) => response.json())
+      .then((datas) => setPurchaseAmount(datas.totalPurchaseAmount || 0))
+      .catch((err) => console.log(err));
+  };
+
+  const fetchStoresData = () => {
+    fetch(`${API_BASE_URL}/api/store/get/${userId}`)
+      .then((response) => response.json())
+      .then((datas) => setStores(Array.isArray(datas) ? datas : []))
+      .catch((err) => console.log(err));
+  };
+
+  const fetchProductsData = () => {
+    fetch(`${API_BASE_URL}/api/product/get/${userId}`)
+      .then((response) => response.json())
+      .then((datas) => setProducts(Array.isArray(datas) ? datas : []))
+      .catch((err) => console.log(err));
+  };
+
   const fetchMonthlySalesData = () => {
-    fetch(`http://localhost:4000/api/sales/getmonthly`)
+    fetch(`${API_BASE_URL}/api/sales/getmonthly/${authContext.user}`)
       .then((response) => response.json())
       .then((datas) => updateChartData(datas.salesAmount))
       .catch((err) => console.log(err));
   };
 
   return (
-    <>
-      <div className="grid grid-cols-1 col-span-12 lg:col-span-10 gap-6 md:grid-cols-3 lg:grid-cols-4  p-4 ">
-        <article className="flex flex-col gap-4 rounded-lg border  border-gray-100 bg-white p-6  ">
+    <div className="p-4 sm:p-6 bg-gray-50 min-h-screen w-full max-w-full overflow-x-hidden">
+      {/* AI Smart Insights Section */}
+      <AIInsights />
+
+      {/* Overview Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
+        {/* Total Sales */}
+        <article className="flex flex-col gap-4 rounded-xl border border-gray-100 bg-white p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
           <div className="inline-flex gap-2 self-end rounded bg-green-100 p-1 text-green-600">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-              />
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
             </svg>
-
-            <span className="text-xs font-medium"> 67.81% </span>
+            <span className="text-xs font-medium"> +12.5% </span>
           </div>
-
           <div>
-            <strong className="block text-sm font-medium text-gray-500">
-              Sales
-            </strong>
-
-            <p>
-              <span className="text-2xl font-medium text-gray-900">
-                ${saleAmount}
-              </span>
-
-              <span className="text-xs text-gray-500"> from $240.94 </span>
+            <strong className="block text-sm font-medium text-gray-500">Total Sales</strong>
+            <p className="mt-1">
+              <span className="text-2xl sm:text-3xl font-extrabold text-gray-900">${saleAmount}</span>
             </p>
           </div>
         </article>
 
-        <article className="flex flex-col  gap-4 rounded-lg border border-gray-100 bg-white p-6 ">
+        {/* Total Purchases */}
+        <article className="flex flex-col gap-4 rounded-xl border border-gray-100 bg-white p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
           <div className="inline-flex gap-2 self-end rounded bg-red-100 p-1 text-red-600">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
-              />
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
             </svg>
-
-            <span className="text-xs font-medium"> 67.81% </span>
+            <span className="text-xs font-medium"> Purchase </span>
           </div>
-
           <div>
-            <strong className="block text-sm font-medium text-gray-500">
-              Purchase
-            </strong>
-
-            <p>
-              <span className="text-2xl font-medium text-gray-900">
-                {" "}
-                ${purchaseAmount}{" "}
-              </span>
-
-              <span className="text-xs text-gray-500"> from $404.32 </span>
+            <strong className="block text-sm font-medium text-gray-500">Total Purchases</strong>
+            <p className="mt-1">
+              <span className="text-2xl sm:text-3xl font-extrabold text-gray-900">${purchaseAmount}</span>
             </p>
           </div>
         </article>
-        <article className="flex flex-col   gap-4 rounded-lg border border-gray-100 bg-white p-6 ">
-          <div className="inline-flex gap-2 self-end rounded bg-red-100 p-1 text-red-600">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
-              />
-            </svg>
 
-            <span className="text-xs font-medium"> 67.81% </span>
+        {/* Total Products */}
+        <article className="flex flex-col gap-4 rounded-xl border border-gray-100 bg-white p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
+          <div className="inline-flex gap-2 self-end rounded bg-indigo-100 p-1 text-indigo-600">
+            <span className="text-xs font-medium"> Items </span>
           </div>
-
           <div>
-            <strong className="block text-sm font-medium text-gray-500">
-              Total Products
-            </strong>
-
-            <p>
-              <span className="text-2xl font-medium text-gray-900">
-                {" "}
-                {products.length}{" "}
-              </span>
-
-              {/* <span className="text-xs text-gray-500"> from $404.32 </span> */}
+            <strong className="block text-sm font-medium text-gray-500">Total Products</strong>
+            <p className="mt-1">
+              <span className="text-2xl sm:text-3xl font-extrabold text-gray-900">{products.length}</span>
             </p>
           </div>
         </article>
-        <article className="flex flex-col   gap-4 rounded-lg border border-gray-100 bg-white p-6 ">
-          <div className="inline-flex gap-2 self-end rounded bg-red-100 p-1 text-red-600">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
-              />
-            </svg>
 
-            <span className="text-xs font-medium"> 67.81% </span>
+        {/* Total Stores */}
+        <article className="flex flex-col gap-4 rounded-xl border border-gray-100 bg-white p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
+          <div className="inline-flex gap-2 self-end rounded bg-purple-100 p-1 text-purple-600">
+            <span className="text-xs font-medium"> Branches </span>
           </div>
-
           <div>
-            <strong className="block text-sm font-medium text-gray-500">
-              Total Stores
-            </strong>
-
-            <p>
-              <span className="text-2xl font-medium text-gray-900">
-                {" "}
-                {stores.length}{" "}
-              </span>
-
-              {/* <span className="text-xs text-gray-500"> from 0 </span> */}
+            <strong className="block text-sm font-medium text-gray-500">Total Stores</strong>
+            <p className="mt-1">
+              <span className="text-2xl sm:text-3xl font-extrabold text-gray-900">{stores.length}</span>
             </p>
           </div>
         </article>
-        <div className="flex justify-around bg-white rounded-lg py-8 col-span-full justify-center">
-          <div>
-            <Chart
-              options={chart.options}
-              series={chart.series}
-              type="bar"
-              width="500"
-            />
+      </div>
+
+      {/* Analytics Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Bar Chart */}
+        <div className="bg-white p-4 sm:p-6 rounded-xl border border-gray-100 shadow-sm">
+          <h3 className="text-sm font-bold text-gray-700 mb-4">Monthly Sales Overview</h3>
+          <div className="w-full overflow-hidden">
+            <Chart options={chart.options} series={chart.series} type="bar" width="100%" height={300} />
           </div>
-          <div>
-            <Doughnut data={data} />
+        </div>
+
+        {/* Doughnut Chart */}
+        <div className="bg-white p-4 sm:p-6 rounded-xl border border-gray-100 shadow-sm">
+          <h3 className="text-sm font-bold text-gray-700 mb-4">Product Stock Distribution</h3>
+          <div className="flex justify-center items-center">
+            <div className="w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64">
+              <Doughnut data={data} options={{ maintainAspectRatio: true, responsive: true }} />
+            </div>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 

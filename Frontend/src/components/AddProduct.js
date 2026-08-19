@@ -2,6 +2,7 @@ import { Fragment, useContext, useRef, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import AuthContext from "../AuthContext";
+import API_BASE_URL from "../config";
 
 export default function AddProduct({
   addProductModalSetting,
@@ -22,20 +23,27 @@ export default function AddProduct({
     setProduct({ ...product, [key]: value });
   };
 
-  const addProduct = () => {
-    fetch("http://localhost:4000/api/product/add", {
-      method: "POST",
-      headers: {
-        "Content-type": "application/json",
-      },
-      body: JSON.stringify(product),
-    })
-      .then((result) => {
+  const addProduct = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/product/add`, {
+        method: "POST",
+        headers: {
+          "Content-type": "application/json",
+        },
+        body: JSON.stringify(product),
+      });
+      const data = await response.json();
+      if (response.ok) {
         alert("Product ADDED");
         handlePageUpdate();
         addProductModalSetting();
-      })
-      .catch((err) => console.log(err));
+      } else {
+        alert("Error: " + (data.message || "Failed to add product. Check database connection."));
+      }
+    } catch (err) {
+      console.log(err);
+      alert("Error: Unable to connect to backend server.");
+    }
   };
 
   return (

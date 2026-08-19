@@ -1,6 +1,7 @@
 import { Fragment, useRef, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { PlusIcon } from "@heroicons/react/24/outline";
+import API_BASE_URL from "../config";
 
 export default function UpdateProduct({
   updateProductData,
@@ -21,19 +22,26 @@ export default function UpdateProduct({
     setProduct({ ...product, [key]: value });
   };
 
-  const updateProduct = () => {
-    fetch("http://localhost:4000/api/product/update", {
-      method: "POST",
-      headers: {
-        "Content-type": "application/json",
-      },
-      body: JSON.stringify(product),
-    })
-      .then((result) => {
+  const updateProduct = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/product/update`, {
+        method: "POST",
+        headers: {
+          "Content-type": "application/json",
+        },
+        body: JSON.stringify(product),
+      });
+      const data = await response.json();
+      if (response.ok) {
         alert("Product Updated");
         setOpen(false);
-      })
-      .catch((err) => console.log(err));
+      } else {
+        alert("Error: " + (data.message || "Failed to update product. Check database connection."));
+      }
+    } catch (err) {
+      console.log(err);
+      alert("Error: Unable to connect to backend server.");
+    }
   };
 
   return (

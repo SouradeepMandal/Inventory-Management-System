@@ -3,8 +3,9 @@ import { Dialog, Transition } from "@headlessui/react";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import UploadImage from "./UploadImage";
 import AuthContext from "../AuthContext";
+import API_BASE_URL from "../config";
 
-export default function AddStore() {
+export default function AddStore({ addStoreModalSetting, handlePageUpdate }) {
   const authContext = useContext(AuthContext);
   const [form, setForm] = useState({
     userId: authContext.user,
@@ -22,19 +23,27 @@ export default function AddStore() {
   const [open, setOpen] = useState(true);
   const cancelButtonRef = useRef(null);
 
-  const addProduct = () => {
-    fetch("http://localhost:4000/api/store/add", {
-      method: "POST",
-      headers: {
-        "Content-type": "application/json",
-      },
-      body: JSON.stringify(form),
-    })
-      .then((result) => {
+  const addProduct = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/store/add`, {
+        method: "POST",
+        headers: {
+          "Content-type": "application/json",
+        },
+        body: JSON.stringify(form),
+      });
+      const data = await response.json();
+      if (response.ok) {
         alert("STORE ADDED");
-        setOpen(false);
-      })
-      .catch((err) => console.log(err));
+        handlePageUpdate();
+        addStoreModalSetting();
+      } else {
+        alert("Error: " + (data.message || "Failed to add store. Check database connection."));
+      }
+    } catch (err) {
+      console.log(err);
+      alert("Error: Unable to connect to backend server.");
+    }
   };
 
   // Uploading image to cloudinary
@@ -185,7 +194,7 @@ export default function AddStore() {
                         </div>
                         <div className="flex items-center space-x-4">
                           <div>
-                            <UploadImage uploadImage={uploadImage} />
+                            <UploadImage uploadImage={uploadImage} label="Upload Store Logo (Optional)" />
                             {/* <label
                               className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                               for="small_size"
@@ -239,7 +248,7 @@ export default function AddStore() {
                   <button
                     type="button"
                     className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
-                    onClick={() => setOpen(false)}
+                    onClick={() => addStoreModalSetting()}
                     ref={cancelButtonRef}
                   >
                     Cancel

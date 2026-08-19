@@ -5,17 +5,25 @@ import SideMenu from "./SideMenu";
 
 function Layout() {
   return (
-    <>
-      <div className="md:h-16">
+    <div className="flex flex-col min-h-screen overflow-x-hidden">
+      {/* Header */}
+      <div className="sticky top-0 z-30">
         <Header />
       </div>
-      <div className="grid grid-cols-12 bg-gray-100 items-baseline">
-        <div className="col-span-2 h-screen sticky top-0 hidden lg:flex">
+
+      {/* Body: Sidebar + Content */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar — hidden on small, shown on lg */}
+        <aside className="hidden lg:flex lg:flex-shrink-0 lg:w-56 xl:w-64">
           <SideMenu />
-        </div>
-        <Outlet />
+        </aside>
+
+        {/* Main content area */}
+        <main className="flex-1 overflow-y-auto overflow-x-hidden bg-gray-50">
+          <Outlet />
+        </main>
       </div>
-    </>
+    </div>
   );
 }
 

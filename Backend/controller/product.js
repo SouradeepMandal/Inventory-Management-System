@@ -2,48 +2,46 @@ const Product = require("../models/Product");
 const Purchase = require("../models/purchase");
 const Sales = require("../models/sales");
 
-// Add Post
-const addProduct = (req, res) => {
-  console.log("req: ", req.body.userId);
-  const addProduct = new Product({
-    userID: req.body.userId,
-    name: req.body.name,
-    manufacturer: req.body.manufacturer,
-    stock: 0,
-    description: req.body.description,
-  });
-
-  addProduct
-    .save()
-    .then((result) => {
-      res.status(200).send(result);
-    })
-    .catch((err) => {
-      res.status(402).send(err);
+// Add Product
+const addProduct = async (req, res) => {
+  try {
+    const newProduct = new Product({
+      userID: req.body.userId,
+      name: req.body.name,
+      manufacturer: req.body.manufacturer,
+      stock: 0,
+      description: req.body.description,
     });
+    const result = await newProduct.save();
+    res.status(200).json(result);
+  } catch (err) {
+    console.error("addProduct error:", err);
+    res.status(500).json({ message: err.message || "Failed to add product." });
+  }
 };
 
 // Get All Products
 const getAllProducts = async (req, res) => {
-  const findAllProducts = await Product.find({
-    userID: req.params.userId,
-  }).sort({ _id: -1 }); // -1 for descending;
-  res.json(findAllProducts);
+  try {
+    const products = await Product.find({ userID: req.params.userId }).sort({ _id: -1 });
+    res.json(products);
+  } catch (err) {
+    console.error("getAllProducts error:", err);
+    res.status(500).json({ message: err.message || "Failed to fetch products." });
+  }
 };
 
 // Delete Selected Product
 const deleteSelectedProduct = async (req, res) => {
-  const deleteProduct = await Product.deleteOne(
-    { _id: req.params.id }
-  );
-  const deletePurchaseProduct = await Purchase.deleteOne(
-    { ProductID: req.params.id }
-  );
-
-  const deleteSaleProduct = await Sales.deleteOne(
-    { ProductID: req.params.id }
-  );
-  res.json({ deleteProduct, deletePurchaseProduct, deleteSaleProduct });
+  try {
+    const deleteProduct = await Product.deleteOne({ _id: req.params.id });
+    const deletePurchaseProduct = await Purchase.deleteMany({ ProductID: req.params.id });
+    const deleteSaleProduct = await Sales.deleteMany({ ProductID: req.params.id });
+    res.json({ deleteProduct, deletePurchaseProduct, deleteSaleProduct });
+  } catch (err) {
+    console.error("deleteSelectedProduct error:", err);
+    res.status(500).json({ message: err.message || "Failed to delete product." });
+  }
 };
 
 // Update Selected Product
@@ -58,21 +56,30 @@ const updateSelectedProduct = async (req, res) => {
       },
       { new: true }
     );
-    console.log(updatedResult);
+    if (!updatedResult) {
+      return res.status(404).json({ message: "Product not found." });
+    }
     res.json(updatedResult);
-  } catch (error) {
-    console.log(error);
-    res.status(402).send("Error");
+  } catch (err) {
+    console.error("updateSelectedProduct error:", err);
+    res.status(500).json({ message: err.message || "Failed to update product." });
   }
 };
 
 // Search Products
 const searchProduct = async (req, res) => {
-  const searchTerm = req.query.searchTerm;
-  const products = await Product.find({
-    name: { $regex: searchTerm, $options: "i" },
-  });
-  res.json(products);
+  try {
+    const searchTerm = req.query.searchTerm;
+    const userId = req.query.userId;
+    const products = await Product.find({
+      userID: userId,
+      name: { $regex: searchTerm, $options: "i" },
+    });
+    res.json(products);
+  } catch (err) {
+    console.error("searchProduct error:", err);
+    res.status(500).json({ message: err.message || "Failed to search products." });
+  }
 };
 
 module.exports = {

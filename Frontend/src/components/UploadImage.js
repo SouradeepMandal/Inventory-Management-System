@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-function UploadImage({ uploadImage }) {
+function UploadImage({ uploadImage, label }) {
   const [fileName, setFileName] = useState("");
 
   const handleFileInputChange = (event) => {
@@ -9,13 +9,14 @@ function UploadImage({ uploadImage }) {
   };
 
   return (
-    <div>
+    <div className="flex flex-col gap-1">
+      {label && <span className="text-sm font-medium text-gray-700">{label}</span>}
       <label
         htmlFor="fileInput"
-        className="inline-block rounded-md shadow-sm py-2 px-4 bg-gray-100 text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        className="inline-flex items-center rounded-md shadow-sm py-2 px-4 bg-gray-100 text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer w-fit"
       >
         <svg
-          className="w-6 h-6 inline-block mr-2"
+          className="w-5 h-5 mr-2"
           viewBox="0 0 24 24"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
@@ -25,8 +26,7 @@ function UploadImage({ uploadImage }) {
             fill="currentColor"
           />
         </svg>
-        <span className="inline-block">
-          {" "}
+        <span className="truncate max-w-[200px]">
           {fileName?.name ? fileName.name : "Choose file"}
         </span>
       </label>
@@ -35,7 +35,6 @@ function UploadImage({ uploadImage }) {
         id="fileInput"
         className="hidden"
         accept=".png, .jpeg, .jpg"
-        required
         onChange={handleFileInputChange}
       />
     </div>

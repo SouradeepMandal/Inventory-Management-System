@@ -5,11 +5,11 @@ import AuthContext from "../AuthContext";
 import { Link } from "react-router-dom";
 
 const navigation = [
-  { name: "Dashboard", href: "/", current: true },
-  { name: "Inventory", href: "/inventory", current: false },
-  { name: "Purchase Details", href: "/purchase-details", current: false },
-  { name: "Sales", href: "/sales", current: false },
-  { name: "Manage Store", href: "/manage-store", current: false },
+  { name: "Dashboard", href: "/" },
+  { name: "Inventory", href: "/inventory" },
+  { name: "Purchase Details", href: "/purchase-details" },
+  { name: "Sales", href: "/sales" },
+  { name: "Manage Store", href: "/manage-store" },
 ];
 
 const userNavigation = [{ name: "Sign out", href: "./login" }];
@@ -20,30 +20,33 @@ function classNames(...classes) {
 
 export default function Header() {
   const authContext = useContext(AuthContext);
-  const localStorageData = JSON.parse(localStorage.getItem("user"));
+  const localStorageData = JSON.parse(localStorage.getItem("user")) || {};
+
+  const userInitial = (localStorageData.firstName || "U").charAt(0).toUpperCase();
+
   return (
     <>
       <div className="min-h-full">
         <Disclosure as="nav" className="bg-gray-800">
           {({ open }) => (
             <>
-              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <div className="mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex h-16 items-center justify-between">
-                  <div className="flex items-center">
+                  <div className="flex items-center min-w-0">
                     <div className="flex-shrink-0">
-                      <div className="flex justify-center items-center gap-2">
+                      <div className="flex items-center gap-2">
                         <img
-                          className="h-8 w-8"
+                          className="h-8 w-8 flex-shrink-0"
                           src={require("../assets/logo.png")}
                           alt="Inventory Management System"
                         />
-                        <span className="font-bold text-white italic">
+                        <span className="font-bold text-white italic text-sm sm:text-base truncate">
                           Inventory Management
                         </span>
                       </div>
                     </div>
                   </div>
-                  <div className="hidden md:block">
+                  <div className="hidden md:block flex-shrink-0">
                     <div className="ml-4 flex items-center md:ml-6">
                       <button
                         type="button"
@@ -58,11 +61,17 @@ export default function Header() {
                         <div>
                           <Menu.Button className="flex max-w-xs items-center rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
                             <span className="sr-only">Open user menu</span>
-                            <img
-                              className="h-8 w-8 rounded-full"
-                              src={localStorageData.imageUrl}
-                              alt="profile"
-                            />
+                            {localStorageData.imageUrl ? (
+                              <img
+                                className="h-8 w-8 rounded-full object-cover"
+                                src={localStorageData.imageUrl}
+                                alt="profile"
+                              />
+                            ) : (
+                              <div className="h-8 w-8 rounded-full bg-indigo-500 flex items-center justify-center">
+                                <span className="text-white font-semibold text-sm">{userInitial}</span>
+                              </div>
+                            )}
                           </Menu.Button>
                         </div>
                         <Transition
@@ -124,14 +133,7 @@ export default function Header() {
                       <Disclosure.Button
                         key={item.name}
                         as="a"
-                        // href={item.href}
-                        className={classNames(
-                          item.current
-                            ? "bg-gray-900 text-white"
-                            : "text-gray-300 hover:bg-gray-700 hover:text-white",
-                          "block rounded-md px-3 py-2 text-base font-medium"
-                        )}
-                        aria-current={item.current ? "page" : undefined}
+                        className="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
                       >
                         {item.name}
                       </Disclosure.Button>
@@ -141,20 +143,26 @@ export default function Header() {
                 <div className="border-t border-gray-700 pt-4 pb-3">
                   <div className="flex items-center px-5">
                     <div className="flex-shrink-0">
-                      <img
-                        className="h-10 w-10 rounded-full"
-                        src={localStorageData.imageUrl}
-                        alt="profile"
-                      />
+                      {localStorageData.imageUrl ? (
+                        <img
+                          className="h-10 w-10 rounded-full object-cover"
+                          src={localStorageData.imageUrl}
+                          alt="profile"
+                        />
+                      ) : (
+                        <div className="h-10 w-10 rounded-full bg-indigo-500 flex items-center justify-center">
+                          <span className="text-white font-bold">{userInitial}</span>
+                        </div>
+                      )}
                     </div>
-                    <div className="ml-3">
-                      <div className="text-base font-medium leading-none text-white">
-                        {localStorageData.firstName +
+                    <div className="ml-3 min-w-0">
+                      <div className="text-base font-medium leading-none text-white truncate">
+                        {(localStorageData.firstName || "") +
                           " " +
-                          localStorageData.lastName}
+                          (localStorageData.lastName || "")}
                       </div>
-                      <div className="text-sm font-medium leading-none text-gray-400">
-                        {localStorageData.email}
+                      <div className="mt-1 text-sm font-medium leading-none text-gray-400 truncate">
+                        {localStorageData.email || ""}
                       </div>
                     </div>
                     <button

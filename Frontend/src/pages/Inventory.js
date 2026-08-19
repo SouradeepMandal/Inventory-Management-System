@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import AddProduct from "../components/AddProduct";
 import UpdateProduct from "../components/UpdateProduct";
 import AuthContext from "../AuthContext";
+import API_BASE_URL from "../config";
 
 function Inventory() {
   const [showProductModal, setShowProductModal] = useState(false);
@@ -13,9 +14,6 @@ function Inventory() {
   const [stores, setAllStores] = useState([]);
 
   const authContext = useContext(AuthContext);
-  console.log('====================================');
-  console.log(authContext);
-  console.log('====================================');
 
   useEffect(() => {
     fetchProductsData();
@@ -24,7 +22,7 @@ function Inventory() {
 
   // Fetching Data of All Products
   const fetchProductsData = () => {
-    fetch(`http://localhost:4000/api/product/get/${authContext.user}`)
+    fetch(`${API_BASE_URL}/api/product/get/${authContext.user}`)
       .then((response) => response.json())
       .then((data) => {
         setAllProducts(data);
@@ -34,7 +32,7 @@ function Inventory() {
 
   // Fetching Data of Search Products
   const fetchSearchData = () => {
-    fetch(`http://localhost:4000/api/product/search?searchTerm=${searchTerm}`)
+    fetch(`${API_BASE_URL}/api/product/search?searchTerm=${searchTerm}&userId=${authContext.user}`)
       .then((response) => response.json())
       .then((data) => {
         setAllProducts(data);
@@ -44,7 +42,7 @@ function Inventory() {
 
   // Fetching all stores data
   const fetchSalesData = () => {
-    fetch(`http://localhost:4000/api/store/get/${authContext.user}`)
+    fetch(`${API_BASE_URL}/api/store/get/${authContext.user}`)
       .then((response) => response.json())
       .then((data) => {
         setAllStores(data);
@@ -58,17 +56,13 @@ function Inventory() {
 
   // Modal for Product UPDATE
   const updateProductModalSetting = (selectedProductData) => {
-    console.log("Clicked: edit");
     setUpdateProduct(selectedProductData);
     setShowUpdateModal(!showUpdateModal);
   };
 
-
   // Delete item
   const deleteItem = (id) => {
-    console.log("Product ID: ", id);
-    console.log(`http://localhost:4000/api/product/delete/${id}`);
-    fetch(`http://localhost:4000/api/product/delete/${id}`)
+    fetch(`${API_BASE_URL}/api/product/delete/${id}`)
       .then((response) => response.json())
       .then((data) => {
         setUpdatePage(!updatePage);
@@ -87,84 +81,85 @@ function Inventory() {
   };
 
   return (
-    <div className="col-span-12 lg:col-span-10  flex justify-center">
-      <div className=" flex flex-col gap-5 w-11/12">
-        <div className="bg-white rounded p-3">
-          <span className="font-semibold px-4">Overall Inventory</span>
-          <div className=" flex flex-col md:flex-row justify-center items-center  ">
-            <div className="flex flex-col p-10  w-full  md:w-3/12  ">
-              <span className="font-semibold text-blue-600 text-base">
+    <div className="w-full p-4 sm:p-6 max-w-full overflow-x-hidden">
+      <div className="flex flex-col gap-5">
+        {/* Overview Summary Cards */}
+        <div className="bg-white rounded-xl border border-gray-100 p-4 sm:p-6 shadow-sm">
+          <span className="font-semibold text-gray-800 text-base">Overall Inventory</span>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+            <div className="flex flex-col p-3 sm:p-4 rounded-lg bg-blue-50">
+              <span className="font-semibold text-blue-600 text-sm">
                 Total Products
               </span>
-              <span className="font-semibold text-gray-600 text-base">
+              <span className="font-bold text-gray-800 text-lg mt-1">
                 {products.length}
               </span>
-              <span className="font-thin text-gray-400 text-xs">
+              <span className="text-gray-400 text-xs mt-0.5">
                 Last 7 days
               </span>
             </div>
-            <div className="flex flex-col gap-3 p-10   w-full  md:w-3/12 sm:border-y-2  md:border-x-2 md:border-y-0">
-              <span className="font-semibold text-yellow-600 text-base">
+            <div className="flex flex-col p-3 sm:p-4 rounded-lg bg-yellow-50">
+              <span className="font-semibold text-yellow-600 text-sm">
                 Stores
               </span>
-              <div className="flex gap-8">
+              <div className="flex gap-4 sm:gap-6 mt-1">
                 <div className="flex flex-col">
-                  <span className="font-semibold text-gray-600 text-base">
+                  <span className="font-bold text-gray-800 text-lg">
                     {stores.length}
                   </span>
-                  <span className="font-thin text-gray-400 text-xs">
+                  <span className="text-gray-400 text-xs">
                     Last 7 days
                   </span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-semibold text-gray-600 text-base">
+                  <span className="font-bold text-gray-800 text-lg">
                     $2000
                   </span>
-                  <span className="font-thin text-gray-400 text-xs">
+                  <span className="text-gray-400 text-xs">
                     Revenue
                   </span>
                 </div>
               </div>
             </div>
-            <div className="flex flex-col gap-3 p-10  w-full  md:w-3/12  sm:border-y-2 md:border-x-2 md:border-y-0">
-              <span className="font-semibold text-purple-600 text-base">
+            <div className="flex flex-col p-3 sm:p-4 rounded-lg bg-purple-50">
+              <span className="font-semibold text-purple-600 text-sm">
                 Top Selling
               </span>
-              <div className="flex gap-8">
+              <div className="flex gap-4 sm:gap-6 mt-1">
                 <div className="flex flex-col">
-                  <span className="font-semibold text-gray-600 text-base">
+                  <span className="font-bold text-gray-800 text-lg">
                     5
                   </span>
-                  <span className="font-thin text-gray-400 text-xs">
+                  <span className="text-gray-400 text-xs">
                     Last 7 days
                   </span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-semibold text-gray-600 text-base">
+                  <span className="font-bold text-gray-800 text-lg">
                     $1500
                   </span>
-                  <span className="font-thin text-gray-400 text-xs">Cost</span>
+                  <span className="text-gray-400 text-xs">Cost</span>
                 </div>
               </div>
             </div>
-            <div className="flex flex-col gap-3 p-10  w-full  md:w-3/12  border-y-2  md:border-x-2 md:border-y-0">
-              <span className="font-semibold text-red-600 text-base">
+            <div className="flex flex-col p-3 sm:p-4 rounded-lg bg-red-50">
+              <span className="font-semibold text-red-600 text-sm">
                 Low Stocks
               </span>
-              <div className="flex gap-8">
+              <div className="flex gap-4 sm:gap-6 mt-1">
                 <div className="flex flex-col">
-                  <span className="font-semibold text-gray-600 text-base">
+                  <span className="font-bold text-gray-800 text-lg">
                     12
                   </span>
-                  <span className="font-thin text-gray-400 text-xs">
+                  <span className="text-gray-400 text-xs">
                     Ordered
                   </span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-semibold text-gray-600 text-base">
+                  <span className="font-bold text-gray-800 text-lg">
                     2
                   </span>
-                  <span className="font-thin text-gray-400 text-xs">
+                  <span className="text-gray-400 text-xs">
                     Not in Stock
                   </span>
                 </div>
@@ -186,19 +181,19 @@ function Inventory() {
           />
         )}
 
-        {/* Table  */}
-        <div className="overflow-x-auto rounded-lg border bg-white border-gray-200 ">
-          <div className="flex justify-between pt-5 pb-3 px-3">
-            <div className="flex gap-4 justify-center items-center ">
-              <span className="font-bold">Products</span>
-              <div className="flex justify-center items-center px-2 border-2 rounded-md ">
+        {/* Products Table */}
+        <div className="rounded-xl border bg-white border-gray-100 shadow-sm">
+          <div className="flex flex-col sm:flex-row justify-between gap-3 pt-5 pb-3 px-4">
+            <div className="flex gap-4 items-center">
+              <span className="font-bold text-gray-800">Products</span>
+              <div className="flex items-center px-3 border border-gray-200 rounded-lg bg-gray-50">
                 <img
                   alt="search-icon"
-                  className="w-5 h-5"
+                  className="w-4 h-4 flex-shrink-0 opacity-50"
                   src={require("../assets/search-icon.png")}
                 />
                 <input
-                  className="border-none outline-none focus:border-none text-xs"
+                  className="border-none outline-none focus:border-none text-sm bg-transparent py-1.5 pl-2 w-full min-w-0"
                   type="text"
                   placeholder="Search here"
                   value={searchTerm}
@@ -206,78 +201,85 @@ function Inventory() {
                 />
               </div>
             </div>
-            <div className="flex gap-4">
+            <div className="flex gap-4 flex-shrink-0">
               <button
-                className="bg-blue-500 hover:bg-blue-700 text-white font-bold p-2 text-xs  rounded"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 text-sm rounded-lg transition-colors duration-150"
                 onClick={addProductModalSetting}
               >
-                {/* <Link to="/inventory/add-product">Add Product</Link> */}
                 Add Product
               </button>
             </div>
           </div>
-          <table className="min-w-full divide-y-2 divide-gray-200 text-sm">
-            <thead>
-              <tr>
-                <th className="whitespace-nowrap px-4 py-2 text-left font-medium text-gray-900">
-                  Products
-                </th>
-                <th className="whitespace-nowrap px-4 py-2 text-left font-medium text-gray-900">
-                  Manufacturer
-                </th>
-                <th className="whitespace-nowrap px-4 py-2 text-left font-medium text-gray-900">
-                  Stock
-                </th>
-                <th className="whitespace-nowrap px-4 py-2 text-left font-medium text-gray-900">
-                  Description
-                </th>
-                <th className="whitespace-nowrap px-4 py-2 text-left font-medium text-gray-900">
-                  Availibility
-                </th>
-                <th className="whitespace-nowrap px-4 py-2 text-left font-medium text-gray-900">
-                  More
-                </th>
-              </tr>
-            </thead>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y-2 divide-gray-200 text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="whitespace-nowrap px-4 py-3 text-left font-semibold text-gray-700">
+                    Products
+                  </th>
+                  <th className="whitespace-nowrap px-4 py-3 text-left font-semibold text-gray-700">
+                    Manufacturer
+                  </th>
+                  <th className="whitespace-nowrap px-4 py-3 text-left font-semibold text-gray-700">
+                    Stock
+                  </th>
+                  <th className="whitespace-nowrap px-4 py-3 text-left font-semibold text-gray-700 hidden sm:table-cell">
+                    Description
+                  </th>
+                  <th className="whitespace-nowrap px-4 py-3 text-left font-semibold text-gray-700">
+                    Availability
+                  </th>
+                  <th className="whitespace-nowrap px-4 py-3 text-left font-semibold text-gray-700">
+                    More
+                  </th>
+                </tr>
+              </thead>
 
-            <tbody className="divide-y divide-gray-200">
-              {products.map((element, index) => {
-                return (
-                  <tr key={element._id}>
-                    <td className="whitespace-nowrap px-4 py-2  text-gray-900">
-                      {element.name}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-2 text-gray-700">
-                      {element.manufacturer}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-2 text-gray-700">
-                      {element.stock}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-2 text-gray-700">
-                      {element.description}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-2 text-gray-700">
-                      {element.stock > 0 ? "In Stock" : "Not in Stock"}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-2 text-gray-700">
-                      <span
-                        className="text-green-700 cursor-pointer"
-                        onClick={() => updateProductModalSetting(element)}
-                      >
-                        Edit{" "}
-                      </span>
-                      <span
-                        className="text-red-600 px-2 cursor-pointer"
-                        onClick={() => deleteItem(element._id)}
-                      >
-                        Delete
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+              <tbody className="divide-y divide-gray-100">
+                {products.map((element, index) => {
+                  return (
+                    <tr key={element._id} className="hover:bg-gray-50 transition-colors duration-100">
+                      <td className="whitespace-nowrap px-4 py-3 font-medium text-gray-900">
+                        {element.name}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-gray-600">
+                        {element.manufacturer}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-gray-600">
+                        {element.stock}
+                      </td>
+                      <td className="px-4 py-3 text-gray-600 max-w-xs truncate hidden sm:table-cell">
+                        {element.description}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                          element.stock > 0
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
+                        }`}>
+                          {element.stock > 0 ? "In Stock" : "Out of Stock"}
+                        </span>
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <span
+                          className="text-indigo-600 hover:text-indigo-800 cursor-pointer font-medium text-sm mr-3 transition-colors"
+                          onClick={() => updateProductModalSetting(element)}
+                        >
+                          Edit
+                        </span>
+                        <span
+                          className="text-red-500 hover:text-red-700 cursor-pointer font-medium text-sm transition-colors"
+                          onClick={() => deleteItem(element._id)}
+                        >
+                          Delete
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

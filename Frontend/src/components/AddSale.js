@@ -1,6 +1,7 @@
 import { Fragment, useRef, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { PlusIcon } from "@heroicons/react/24/outline";
+import API_BASE_URL from "../config";
 
 export default function AddSale({
   addSaleModalSetting,
@@ -27,20 +28,27 @@ export default function AddSale({
   };
 
   // POST Data
-  const addSale = () => {
-    fetch("http://localhost:4000/api/sales/add", {
-      method: "POST",
-      headers: {
-        "Content-type": "application/json",
-      },
-      body: JSON.stringify(sale),
-    })
-      .then((result) => {
+  const addSale = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/sales/add`, {
+        method: "POST",
+        headers: {
+          "Content-type": "application/json",
+        },
+        body: JSON.stringify(sale),
+      });
+      const data = await response.json();
+      if (response.ok) {
         alert("Sale ADDED");
         handlePageUpdate();
         addSaleModalSetting();
-      })
-      .catch((err) => console.log(err));
+      } else {
+        alert("Error: " + (data.message || "Failed to add sale. Check database connection."));
+      }
+    } catch (err) {
+      console.log(err);
+      alert("Error: Unable to connect to backend server.");
+    }
   };
 
   return (

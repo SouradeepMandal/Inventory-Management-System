@@ -1,180 +1,149 @@
-// import { LockClosedIcon } from "@heroicons/react/20/solid";
 import { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthContext from "../AuthContext";
+import API_BASE_URL from "../config";
 
 function Login() {
   const [form, setForm] = useState({
     email: "",
     password: "",
   });
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   const authContext = useContext(AuthContext);
   const navigate = useNavigate();
-
 
   const handleInputChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const authCheck = () => {
-    setTimeout(() => {
-      fetch("http://localhost:4000/api/login")
-        .then((response) => response.json())
-        .then((data) => {
-          alert("Successfully Login");
-          localStorage.setItem("user", JSON.stringify(data));
-          authContext.signin(data._id, () => {
-            navigate("/");
-          });
-        })
-        .catch((err) => {
-          alert("Wrong credentials, Try again")
-          console.log(err);
-        });
-    }, 3000);
-  };
+  const loginUser = async (e) => {
+    e.preventDefault();
+    setErrorMsg("");
 
-  const loginUser = (e) => {
-    // Cannot send empty data
-    if (form.email === "" || form.password === "") {
-      alert("To login user, enter details to proceed...");
-    } else {
-      fetch("http://localhost:4000/api/login", {
+    if (!form.email || !form.password) {
+      setErrorMsg("Please enter both email and password.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/login`, {
         method: "POST",
         headers: {
-          "Content-type": "application/json",
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(form),
-      })
-        .then((result) => {
-          console.log("User login", result);
-        })
-        .catch((error) => {
-          console.log("Something went wrong ", error);
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.token) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        authContext.signin(data.user, () => {
+          navigate("/");
         });
+      } else {
+        setErrorMsg(data.message || "Invalid credentials. Please try again.");
+      }
+    } catch (err) {
+      console.error("Login Error: ", err);
+      setErrorMsg("Unable to connect to backend server. Make sure server is running.");
+    } finally {
+      setLoading(false);
     }
-    authCheck();
   };
 
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-  };
-
-  
   return (
     <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 h-screen  items-center place-items-center">
-        <div className="flex justify-center">
-          <img src={require("../assets/signup.jpg")} alt="" />
-        </div>
-        <div className="w-full max-w-md space-y-8 p-10 rounded-lg">
-          <div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8 sm:px-6 lg:px-8">
+        <div className="flex flex-col sm:flex-row items-center gap-8 sm:gap-12 max-w-4xl w-full">
+          {/* Illustration — hidden on very small, shown from sm up */}
+          <div className="hidden sm:flex justify-center flex-1 max-w-sm">
             <img
-              className="mx-auto h-12 w-auto"
-              src={require("../assets/logo.png")}
-              alt="Your Company"
+              src={require("../assets/signup.jpg")}
+              alt="Signup Illustration"
+              className="w-full max-h-80 object-contain"
             />
-            <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-              Signin to your account
-            </h2>
-            <p className="mt-2 text-center text-sm text-gray-600">
-              Or
-              <span
-                className="font-medium text-indigo-600 hover:text-indigo-500"
-              >
-                start your 14-day free trial
-              </span>
-            </p>
           </div>
-          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-            {/* <input type="hidden" name="remember" defaultValue="true" /> */}
-            <div className="-space-y-px rounded-md shadow-sm">
-              <div>
-                <label htmlFor="email-address" className="sr-only">
-                  Email address
-                </label>
-                <input
-                  id="email-address"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  className="relative block w-full rounded-t-md border-0 py-1.5 px-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                  placeholder="Email address"
-                  value={form.email}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div>
-                <label htmlFor="password" className="sr-only">
-                  Password
-                </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  className="relative block w-full rounded-b-md border-0 py-1.5 px-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                  placeholder="Password"
-                  value={form.password}
-                  onChange={handleInputChange}
-                />
-              </div>
-            </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
-                />
-                <label
-                  htmlFor="remember-me"
-                  className="ml-2 block text-sm text-gray-900"
-                >
-                  Remember me
-                </label>
-              </div>
-
-              <div className="text-sm">
-                <span
-                  className="font-medium text-indigo-600 hover:text-indigo-500"
-                >
-                  Forgot your password?
-                </span>
-              </div>
-            </div>
-
+          {/* Login Form */}
+          <div className="w-full max-w-md space-y-8 p-6 sm:p-10 bg-white rounded-xl shadow-lg border border-gray-100">
             <div>
-              <button
-                type="submit"
-                className="group relative flex w-full justify-center rounded-md bg-indigo-600 py-2 px-3 text-sm font-semibold text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-                onClick={loginUser}
-              >
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-                  {/* <LockClosedIcon
-                    className="h-5 w-5 text-indigo-500 group-hover:text-indigo-400"
-                    aria-hidden="true"
-                  /> */}
-                </span>
-                Sign in
-              </button>
+              <img
+                className="mx-auto h-12 w-auto"
+                src={require("../assets/logo.png")}
+                alt="Inventory Management"
+              />
+              <h2 className="mt-6 text-center text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
+                Sign in to your account
+              </h2>
               <p className="mt-2 text-center text-sm text-gray-600">
-                Or{" "}
-                <span
-                  className="font-medium text-indigo-600 hover:text-indigo-500"
-                >
-                  Don't Have an Account, Please{" "}
-                  <Link to="/register"> Register now </Link>
-                </span>
+                Manage your stock, purchases, & sales seamlessly
               </p>
             </div>
-          </form>
+
+            {errorMsg && (
+              <div className="p-3 text-sm text-red-700 bg-red-100 rounded-lg border border-red-200">
+                {errorMsg}
+              </div>
+            )}
+
+            <form className="mt-8 space-y-6" onSubmit={loginUser}>
+              <div className="space-y-4 rounded-md shadow-sm">
+                <div>
+                  <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 mb-1">
+                    Email address
+                  </label>
+                  <input
+                    id="email-address"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    className="relative block w-full rounded-md border border-gray-300 py-2 px-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                    placeholder="Email address"
+                    value={form.email}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                    Password
+                  </label>
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                    className="relative block w-full rounded-md border border-gray-300 py-2 px-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                    placeholder="Password"
+                    value={form.password}
+                    onChange={handleInputChange}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="group relative flex w-full justify-center rounded-md bg-indigo-600 py-2.5 px-4 text-sm font-semibold text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600 transition duration-150 disabled:opacity-50"
+                >
+                  {loading ? "Signing in..." : "Sign in"}
+                </button>
+                <p className="mt-4 text-center text-sm text-gray-600">
+                  Don't have an account?{" "}
+                  <Link to="/register" className="font-semibold text-indigo-600 hover:text-indigo-500">
+                    Register now
+                  </Link>
+                </p>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </>

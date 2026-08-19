@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import UploadImage from "../components/UploadImage";
+import AuthContext from "../AuthContext";
+import API_BASE_URL from "../config";
 
 function Register() {
   const [form, setForm] = useState({
@@ -11,92 +13,124 @@ function Register() {
     phoneNumber: "",
     imageUrl: "",
   });
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
+  const authContext = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // Handling Input change for registration form.
   const handleInputChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Register User
-  const registerUser = () => {
-    fetch("http://localhost:4000/api/register", {
-      method: "POST",
-      headers: {
-        "Content-type": "application/json",
-      },
-      body: JSON.stringify(form),
-    })
-      .then((result) => {
-        alert("Successfully Registered, Now Login with your details");
-        navigate('/login')
-        
-      })
-      .catch((err) => console.log(err));
-  };
-  // ------------------
+  const registerUser = async (e) => {
+    e.preventDefault();
+    setErrorMsg("");
 
-  // Uploading image to cloudinary
+    if (!form.firstName || !form.lastName || !form.email || !form.password) {
+      setErrorMsg("Please fill in all required fields.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(form),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.token) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        authContext.signin(data.user, () => {
+          navigate("/");
+        });
+      } else {
+        setErrorMsg(data.message || "Registration failed. Please check details.");
+      }
+    } catch (err) {
+      console.error("Register Error: ", err);
+      setErrorMsg("Unable to connect to backend server. Make sure server is running.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const uploadImage = async (image) => {
     const data = new FormData();
     data.append("file", image);
     data.append("upload_preset", "inventoryapp");
 
-    await fetch("https://api.cloudinary.com/v1_1/ddhayhptm/image/upload", {
-      method: "POST",
-      body: data,
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setForm({ ...form, imageUrl: data.url });
-        alert("Image Successfully Uploaded");
-      })
-      .catch((error) => console.log(error));
+    try {
+      const res = await fetch("https://api.cloudinary.com/v1_1/ddhayhptm/image/upload", {
+        method: "POST",
+        body: data,
+      });
+      const dataRes = await res.json();
+      setForm({ ...form, imageUrl: dataRes.url });
+      alert("Profile Image Uploaded Successfully!");
+    } catch (error) {
+      console.error("Image Upload Error: ", error);
+    }
   };
-
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-  }
 
   return (
     <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 h-screen  items-center place-items-center">
-        <div className="w-full max-w-md space-y-8  p-10 rounded-lg">
-          <div>
-            <img
-              className="mx-auto h-12 w-auto"
-              src={require("../assets/logo.png")}
-              alt="Your Company"
-            />
-            <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-              Register your account
-            </h2>
-          </div>
-          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-            {/* <input type="hidden" name="remember" defaultValue="true"  /> */}
-            <div className="flex flex-col gap-4 -space-y-px rounded-md shadow-sm">
-              <div className="flex gap-4">
-                <input
-                  name="firstName"
-                  type="text"
-                  required
-                  className="relative block w-full rounded-t-md border-0 py-1.5 px-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                  placeholder="First Name"
-                  value={form.firstName}
-                  onChange={handleInputChange}
-                />
-                <input
-                  name="lastName"
-                  type="text"
-                  required
-                  className="relative block w-full rounded-t-md border-0 py-1.5 px-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                  placeholder="Last Name"
-                  value={form.lastName}
-                  onChange={handleInputChange}
-                />
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8 sm:px-6 lg:px-8">
+        <div className="flex flex-col sm:flex-row items-center gap-8 sm:gap-12 max-w-4xl w-full">
+          {/* Registration Form */}
+          <div className="w-full max-w-md space-y-6 p-6 sm:p-10 bg-white rounded-xl shadow-lg border border-gray-100 order-2 sm:order-1">
+            <div>
+              <img
+                className="mx-auto h-12 w-auto"
+                src={require("../assets/logo.png")}
+                alt="Inventory Management"
+              />
+              <h2 className="mt-4 text-center text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
+                Create your account
+              </h2>
+              <p className="mt-1 text-center text-sm text-gray-600">
+                Start managing stock & inventory today
+              </p>
+            </div>
+
+            {errorMsg && (
+              <div className="p-3 text-sm text-red-700 bg-red-100 rounded-lg border border-red-200">
+                {errorMsg}
               </div>
+            )}
+
+            <form className="space-y-4" onSubmit={registerUser}>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1">
+                  <input
+                    name="firstName"
+                    type="text"
+                    required
+                    className="w-full rounded-md border border-gray-300 py-2 px-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                    placeholder="First Name"
+                    value={form.firstName}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="flex-1">
+                  <input
+                    name="lastName"
+                    type="text"
+                    required
+                    className="w-full rounded-md border border-gray-300 py-2 px-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                    placeholder="Last Name"
+                    value={form.lastName}
+                    onChange={handleInputChange}
+                  />
+                </div>
+              </div>
+
               <div>
                 <input
                   id="email-address"
@@ -104,12 +138,13 @@ function Register() {
                   type="email"
                   autoComplete="email"
                   required
-                  className="relative block w-full rounded-t-md border-0 py-1.5 px-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                  className="w-full rounded-md border border-gray-300 py-2 px-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                   placeholder="Email address"
                   value={form.email}
                   onChange={handleInputChange}
                 />
               </div>
+
               <div>
                 <input
                   id="password"
@@ -117,82 +152,49 @@ function Register() {
                   type="password"
                   autoComplete="current-password"
                   required
-                  className="relative block w-full rounded-b-md border-0 py-1.5 px-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                  className="w-full rounded-md border border-gray-300 py-2 px-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                   placeholder="Password"
                   value={form.password}
                   onChange={handleInputChange}
                 />
               </div>
+
               <div>
                 <input
                   name="phoneNumber"
                   type="number"
                   autoComplete="phoneNumber"
-                  required
-                  className="relative block w-full rounded-b-md border-0 py-1.5 px-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                  placeholder="Phone Number"
+                  className="w-full rounded-md border border-gray-300 py-2 px-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                  placeholder="Phone Number (Optional)"
                   value={form.phoneNumber}
                   onChange={handleInputChange}
                 />
               </div>
-              <UploadImage uploadImage={uploadImage} />
-            </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
-                  checked
-                  required
-                />
-                <label
-                  htmlFor="remember-me"
-                  className="ml-2 block text-sm text-gray-900"
+              <UploadImage uploadImage={uploadImage} label="Upload Profile Picture (Optional)" />
+
+              <div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="group relative flex w-full justify-center rounded-md bg-indigo-600 py-2.5 px-4 text-sm font-semibold text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600 transition duration-150 disabled:opacity-50"
                 >
-                  I Agree Terms & Conditons
-                </label>
+                  {loading ? "Creating Account..." : "Sign up"}
+                </button>
+                <p className="mt-3 text-center text-sm text-gray-600">
+                  Already have an account?{" "}
+                  <Link to="/login" className="font-semibold text-indigo-600 hover:text-indigo-500">
+                    Sign in
+                  </Link>
+                </p>
               </div>
+            </form>
+          </div>
 
-              <div className="text-sm">
-                <span
-                  className="font-medium text-indigo-600 hover:text-indigo-500"
-                >
-                  Forgot your password?
-                </span>
-              </div>
-            </div>
-
-            <div>
-              <button
-                type="submit"
-                className="group relative flex w-full justify-center rounded-md bg-indigo-600 py-2 px-3 text-sm font-semibold text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-                onClick={registerUser}
-              >
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-                  {/* <LockClosedIcon
-                      className="h-5 w-5 text-indigo-500 group-hover:text-indigo-400"
-                      aria-hidden="true"
-                    /> */}
-                </span>
-                Sign up
-              </button>
-              <p className="mt-2 text-center text-sm text-gray-600">
-                Or{" "}
-                <span
-                  className="font-medium text-indigo-600 hover:text-indigo-500"
-                >
-                  Already Have an Account, Please
-                  <Link to="/login"> Signin now </Link>
-                </span>
-              </p>
-            </div>
-          </form>
-        </div>
-        <div className="flex justify-center order-first sm:order-last">
-          <img src={require("../assets/Login.png")} alt="" />
+          {/* Illustration — hidden on very small, shown from sm */}
+          <div className="hidden sm:flex justify-center flex-1 max-w-sm order-1 sm:order-2">
+            <img src={require("../assets/Login.png")} alt="Registration" className="w-full max-h-80 object-contain" />
+          </div>
         </div>
       </div>
     </>
