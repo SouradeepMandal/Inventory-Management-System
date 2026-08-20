@@ -205,7 +205,12 @@ function Register() {
               </div>
             )}
 
-            <form onSubmit={phase === "otp_verified" ? completeRegistration : sendOtp} className="space-y-4">
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              if (phase === "details") sendOtp(e);
+              else if (phase === "otp_sent") verifyOtp();
+              else if (phase === "otp_verified") completeRegistration(e);
+            }} className="space-y-4">
 
               {/* ── Name Fields ── */}
               <div className="flex gap-3">
