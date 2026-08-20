@@ -9,7 +9,7 @@ try {
     // Ignore error if custom DNS cannot be set
 }
 
-const uri = process.env.MONGO_URL;
+const uri = process.env.MONGO_URL || "mongodb+srv://souradeepmandal459_db_user:AkgRUlMsMbc4zmvm@cluster0.tcottl5.mongodb.net/InventoryManagementApp?retryWrites=true&w=majority";
 
 function main() {
     mongoose.connect(uri).then(() => {
