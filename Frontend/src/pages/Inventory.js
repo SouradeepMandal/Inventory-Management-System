@@ -23,7 +23,9 @@ function Inventory() {
 
   // Fetching Data of All Products
   const fetchProductsData = () => {
-    fetch(`${API_BASE_URL}/api/product/get/${authContext.user?._id || authContext.user}`)
+    fetch(`${API_BASE_URL}/api/product/get/${authContext.user?._id || authContext.user}`, {
+      headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+    })
       .then((response) => response.json())
       .then((data) => {
         setAllProducts(data);
@@ -33,7 +35,9 @@ function Inventory() {
 
   // Fetching Data of Search Products
   const fetchSearchData = () => {
-    fetch(`${API_BASE_URL}/api/product/search?searchTerm=${searchTerm}&userId=${authContext.user?._id || authContext.user}`)
+    fetch(`${API_BASE_URL}/api/product/search?searchTerm=${searchTerm}&userId=${authContext.user?._id || authContext.user}`, {
+      headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+    })
       .then((response) => response.json())
       .then((data) => {
         setAllProducts(data);
@@ -43,7 +47,9 @@ function Inventory() {
 
   // Fetching all stores data
   const fetchSalesData = () => {
-    fetch(`${API_BASE_URL}/api/store/get/${authContext.user?._id || authContext.user}`)
+    fetch(`${API_BASE_URL}/api/store/get/${authContext.user?._id || authContext.user}`, {
+      headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+    })
       .then((response) => response.json())
       .then((data) => {
         setAllStores(data);
@@ -63,7 +69,9 @@ function Inventory() {
 
   // Delete item
   const deleteItem = (id) => {
-    fetch(`${API_BASE_URL}/api/product/delete/${id}`)
+    fetch(`${API_BASE_URL}/api/product/delete/${id}`, {
+      headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+    })
       .then((response) => response.json())
       .then((data) => {
         setUpdatePage(!updatePage);

@@ -102,35 +102,45 @@ function Dashboard() {
   }, [userId]);
 
   const fetchTotalSaleAmount = () => {
-    fetch(`${API_BASE_URL}/api/sales/get/${userId}/totalsaleamount`)
+    fetch(`${API_BASE_URL}/api/sales/get/${userId}/totalsaleamount`, {
+      headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+    })
       .then((response) => response.json())
       .then((datas) => setSaleAmount(datas.totalSaleAmount || 0))
       .catch((err) => console.log(err));
   };
 
   const fetchTotalPurchaseAmount = () => {
-    fetch(`${API_BASE_URL}/api/purchase/get/${userId}/totalpurchaseamount`)
+    fetch(`${API_BASE_URL}/api/purchase/get/${userId}/totalpurchaseamount`, {
+      headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+    })
       .then((response) => response.json())
       .then((datas) => setPurchaseAmount(datas.totalPurchaseAmount || 0))
       .catch((err) => console.log(err));
   };
 
   const fetchStoresData = () => {
-    fetch(`${API_BASE_URL}/api/store/get/${userId}`)
+    fetch(`${API_BASE_URL}/api/store/get/${userId}`, {
+      headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+    })
       .then((response) => response.json())
       .then((datas) => setStores(Array.isArray(datas) ? datas : []))
       .catch((err) => console.log(err));
   };
 
   const fetchProductsData = () => {
-    fetch(`${API_BASE_URL}/api/product/get/${userId}`)
+    fetch(`${API_BASE_URL}/api/product/get/${userId}`, {
+      headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+    })
       .then((response) => response.json())
       .then((datas) => setProducts(Array.isArray(datas) ? datas : []))
       .catch((err) => console.log(err));
   };
 
   const fetchMonthlySalesData = () => {
-    fetch(`${API_BASE_URL}/api/sales/getmonthly/${userId}`)
+    fetch(`${API_BASE_URL}/api/sales/getmonthly/${userId}`, {
+      headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+    })
       .then((response) => response.json())
       .then((datas) => updateChartData(datas.salesAmount))
       .catch((err) => console.log(err));

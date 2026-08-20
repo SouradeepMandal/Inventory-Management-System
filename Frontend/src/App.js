@@ -11,6 +11,7 @@ import ProtectedWrapper from "./ProtectedWrapper";
 import Store from "./pages/Store";
 import Sales from "./pages/Sales";
 import PurchaseDetails from "./pages/PurchaseDetails";
+import API_BASE_URL from "./config";
 import "./index.css";
 
 const App = () => {
@@ -18,19 +19,35 @@ const App = () => {
   const [loader, setLoader] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    const storedToken = localStorage.getItem("token");
-
-    if (storedUser && storedToken) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (err) {
-        setUser(storedUser);
+    const verifyUser = async () => {
+      const storedToken = localStorage.getItem("token");
+      if (storedToken) {
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/user/me`, {
+            headers: {
+              "Authorization": `Bearer ${storedToken}`
+            }
+          });
+          if (res.ok) {
+            const userData = await res.json();
+            setUser(userData);
+          } else {
+            setUser(null);
+            localStorage.removeItem("user");
+            localStorage.removeItem("token");
+          }
+        } catch (err) {
+          setUser(null);
+          localStorage.removeItem("user");
+          localStorage.removeItem("token");
+        }
+      } else {
+        setUser(null);
       }
-    } else {
-      setUser(null);
-    }
-    setLoader(false);
+      setLoader(false);
+    };
+
+    verifyUser();
   }, []);
 
   const signin = (newUser, callback) => {

@@ -21,7 +21,9 @@ function Sales() {
 
   // Fetching Data of All Sales
   const fetchSalesData = () => {
-    fetch(`${API_BASE_URL}/api/sales/get/${authContext.user?._id || authContext.user}`)
+    fetch(`${API_BASE_URL}/api/sales/get/${authContext.user?._id || authContext.user}`, {
+      headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+    })
       .then((response) => response.json())
       .then((data) => {
         setAllSalesData(data);
@@ -31,7 +33,9 @@ function Sales() {
 
   // Fetching Data of All Products
   const fetchProductsData = () => {
-    fetch(`${API_BASE_URL}/api/product/get/${authContext.user?._id || authContext.user}`)
+    fetch(`${API_BASE_URL}/api/product/get/${authContext.user?._id || authContext.user}`, {
+      headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+    })
       .then((response) => response.json())
       .then((data) => {
         setAllProducts(data);
@@ -41,7 +45,9 @@ function Sales() {
 
   // Fetching Data of All Stores
   const fetchStoresData = () => {
-    fetch(`${API_BASE_URL}/api/store/get/${authContext.user?._id || authContext.user}`)
+    fetch(`${API_BASE_URL}/api/store/get/${authContext.user?._id || authContext.user}`, {
+      headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+    })
       .then((response) => response.json())
       .then((data) => {
         setAllStores(data);

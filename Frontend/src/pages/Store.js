@@ -14,9 +14,12 @@ function Store() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Fetching all stores data
   const fetchData = () => {
-    fetch(`${API_BASE_URL}/api/store/get/${authContext.user?._id || authContext.user}`)
+    fetch(`${API_BASE_URL}/api/store/get/${authContext.user?._id || authContext.user}`, {
+      headers: {
+        "Authorization": `Bearer ${localStorage.getItem("token")}`
+      }
+    })
       .then((response) => response.json())
       .then((data) => {
         setAllStores(data);
@@ -31,6 +34,9 @@ function Store() {
     if (window.confirm("Are you sure you want to delete this store?")) {
       fetch(`${API_BASE_URL}/api/store/delete/${id}`, {
         method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        }
       })
         .then((response) => response.json())
         .then((data) => {

@@ -19,7 +19,9 @@ function PurchaseDetails() {
 
   // Fetching Data of All Purchase items
   const fetchPurchaseData = () => {
-    fetch(`${API_BASE_URL}/api/purchase/get/${authContext.user?._id || authContext.user}`)
+    fetch(`${API_BASE_URL}/api/purchase/get/${authContext.user?._id || authContext.user}`, {
+      headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+    })
       .then((response) => response.json())
       .then((data) => {
         setAllPurchaseData(data);
@@ -29,7 +31,9 @@ function PurchaseDetails() {
 
   // Fetching Data of All Products
   const fetchProductsData = () => {
-    fetch(`${API_BASE_URL}/api/product/get/${authContext.user?._id || authContext.user}`)
+    fetch(`${API_BASE_URL}/api/product/get/${authContext.user?._id || authContext.user}`, {
+      headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+    })
       .then((response) => response.json())
       .then((data) => {
         setAllProducts(data);

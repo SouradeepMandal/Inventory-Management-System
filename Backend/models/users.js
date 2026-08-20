@@ -4,11 +4,8 @@ const UserSchema = new mongoose.Schema({
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     email: { type: String, required: true, unique: true, lowercase: true },
-    password: { type: String },
-    imageUrl: { type: String },
-    isVerified: { type: Boolean, default: false },
-    otp: { type: String },
-    otpExpiresAt: { type: Date }
+    password: { type: String, required: true },
+    imageUrl: { type: String }
 }, { timestamps: true });
 
 const User = mongoose.model("users", UserSchema);
